@@ -8,6 +8,8 @@ import (
 
 type config struct {
 	Frequency duration
+	GroupID   []uint64
+	Template  string
 }
 
 type duration struct{ time.Duration }
@@ -29,5 +31,10 @@ func getConfig() (config, error) {
 }
 
 const defaultConfig = `# 配置文件
-Frequency = 10m
+Frequency = "10m" 	# 检查频率
+GroupID = [123456] 	# 群号(支持多个群)
+Template = '''
+Mojang于{{ .time.Format "2006-01-02 15:04:05" }}发布了
+Minecraft {{ .ID }}{{ if eq .Type "snapshot" }}快照{{ end }}
+'''	# 提醒模版
 `

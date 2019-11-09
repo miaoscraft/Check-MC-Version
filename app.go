@@ -3,10 +3,9 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"github.com/Tnze/CoolQ-Golang-SDK/cqp"
-	"log"
 	"net/http"
+	"text/template"
 	"time"
 )
 
@@ -15,13 +14,30 @@ import (
 // cqp: 版本: 1.0.0:0
 // cqp: 作者: Tnze
 // cqp: 简介: 自动检查Minecraft版本更新
-func main() { /*此处应当留空*/ }
+func main() {}
+
+var conf config             // 插件设置
+var temp *template.Template // 通知模版
+var latestRelease, latestSnapshot string
 
 func init() {
 	cqp.AppID = "cn.miaoscraft.mc-checker"
 
 	ctx, cancel := context.WithCancel(context.Background())
 	cqp.Enable = func() int32 {
+		var err error
+		conf, err = getConfig()
+		if err != nil {
+			LogErrorf("读取配置出错: %v", err)
+			return 1
+		}
+
+		temp, err = template.New("update").Parse(conf.Template)
+		if err != nil {
+			LogErrorf("解析模版出错: %v", err)
+			return 1
+		}
+
 		go checkLoop(ctx)
 		return 0
 	}
@@ -44,7 +60,7 @@ func checkLoop(ctx context.Context) {
 		case <-ticker.C:
 			list, err := check()
 			if err != nil {
-				cqp.AddLog(cqp.Error, "MC更新通知", fmt.Sprintf("检查更新出错: %v", err))
+				LogErrorf("检查更新出错: %v", err)
 			} else {
 				notice(list)
 			}
@@ -54,11 +70,13 @@ func checkLoop(ctx context.Context) {
 
 func notice(list versions) {
 	for _, v := range list.Versions {
-		if v.ID == list.Latest.Release {
-			log.Println("最新版本：", v.ID, "发布日期：", v.Time.Format("2006-01-02"))
+		if v.ID == list.Latest.Release && v.ID != latestRelease {
+			sendMsg(v)
+			latestRelease = list.Latest.Release
 		}
-		if v.ID == list.Latest.Snapshot {
-			log.Println("最新快照：", v.ID, "发布日期：", v.Time.Format("2006-01-02"))
+		if v.ID == list.Latest.Snapshot && v.ID != latestSnapshot {
+			sendMsg(v)
+			latestSnapshot = list.Latest.Snapshot
 		}
 	}
 }
@@ -81,11 +99,13 @@ type versions struct {
 	Latest struct {
 		Release, Snapshot string
 	}
-	Versions []struct {
-		ID          string
-		Type        string
-		URL         string
-		Time        time.Time
-		ReleaseTime time.Time
-	}
+	Versions []version
+}
+
+type version struct {
+	ID          string
+	Type        string
+	URL         string
+	Time        time.Time
+	ReleaseTime time.Time
 }
