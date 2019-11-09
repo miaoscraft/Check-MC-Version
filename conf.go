@@ -30,11 +30,16 @@ func getConfig() (config, error) {
 	return c, err
 }
 
-const defaultConfig = `# 配置文件
-Frequency = "10m" 	# 检查频率
-GroupID = [123456] 	# 群号(支持多个群)
+const defaultConfig = `# MC版本更新推送姬配置文件
+
+# 检查频率
+Frequency = "10m"
+
+# 群号(支持多个群)
+GroupID = [123456]
+
+# 提醒模版
 Template = '''
-Mojang于{{ .time.Format "2006-01-02 15:04:05" }}发布了
-Minecraft {{ .ID }}{{ if eq .Type "snapshot" }}快照{{ end }}
-'''	# 提醒模版
+{{ .Time.Format "2006-01-02 15:04:05" }}
+Minecraft {{ .ID }}{{ if eq .Type "snapshot" }}快照版{{ else if eq .Type "release" }}正式版{{ end }}发布了！！'''
 `
