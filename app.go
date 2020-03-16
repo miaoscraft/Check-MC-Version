@@ -12,7 +12,7 @@ import (
 
 //go:generate cqcfg -c .
 // cqp: 名称: MC版本更新推送
-// cqp: 版本: 1.0.0:0
+// cqp: 版本: 1.0.1:0
 // cqp: 作者: Tnze
 // cqp: 简介: 自动检查Minecraft版本更新
 func main() {}
