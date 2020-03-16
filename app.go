@@ -3,10 +3,11 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"github.com/Tnze/CoolQ-Golang-SDK/cqp"
 	"net/http"
 	"text/template"
 	"time"
+
+	"github.com/Tnze/CoolQ-Golang-SDK/cqp"
 )
 
 //go:generate cqcfg -c .
@@ -49,9 +50,17 @@ func init() {
 }
 
 func checkLoop(ctx context.Context) {
+	//立刻检查并记录当前MC版本号
+	list, err := check()
+	if err != nil {
+		LogErrorf("检查更新出错: %v", err)
+	} else {
+		latestRelease = list.Latest.Release
+		latestSnapshot = list.Latest.Snapshot
+	}
+
 	ticker := time.NewTicker(time.Minute * 1)
 	defer ticker.Stop()
-
 	for {
 		select {
 		case <-ctx.Done():
